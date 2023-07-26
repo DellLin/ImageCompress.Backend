@@ -61,7 +61,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         );
 builder.Services.AddGrpcClient<AccountServiceClient>(o =>
 {
-    o.Address = new Uri("http://localhost:5243");
+    if (builder.Environment.IsDevelopment())
+    { o.Address = new Uri("http://localhost:5243"); }
+    else
+    { o.Address = new Uri("https://imagecompress-account-sql-iaxnu4eisa-de.a.run.app"); }
 });
 builder.Services.AddSingleton<KmsHelper>();
 builder.Services.AddSingleton<JwtHelper>();
