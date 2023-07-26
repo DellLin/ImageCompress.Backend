@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+option csharp_namespace = "ImageCompress.AccountSQL";
+
+package account;
+
+service AccountService {
+  rpc InsertAccount(InsertAccountRequest) returns (InsertAccountReply);
+  rpc SelectAccountById(SelectAccountByIdRequest) returns (SelectAccountByIdReply);
+  rpc SelectAccountByEmail(SelectAccountByEmailRequest) returns (SelectAccountByEmailReply);
+  rpc UpdateAccount(UpdateAccountRequest) returns (UpdateAccountReply);
+  rpc DeleteAccount(DeleteAccountRequest) returns (DeleteAccountReply);
+}
+
+message InsertAccountRequest {
+  AccountItem Account = 1;
+}
+message InsertAccountReply {
+  bool State = 1;
+  string Message = 2;
+}
+
+message SelectAccountByIdRequest {
+  string Id = 1;
+}
+
+message SelectAccountByIdReply {
+  optional AccountItem account = 1;
+}
+
+message SelectAccountByEmailRequest {
+  string Email = 1;
+}
+
+message SelectAccountByEmailReply {
+  optional AccountItem account = 1;
+}
+
+message UpdateAccountRequest {
+  AccountItem Account = 1;
+}
+
+message UpdateAccountReply {
+  bool State = 1;
+  string Message = 2;
+}
+
+message DeleteAccountRequest {
+  AccountItem Account = 1;
+}
+
+message DeleteAccountReply {
+  bool State = 1; 
+  string Message = 2;
+}
+
+message AccountItem {
+  string Id = 1;
+  optional string Email = 2;
+  optional string Password = 3;
+  optional string GoogleId = 4;
+  optional string LineId = 5;
+  optional int32 State = 6;
+  optional string CreateDate = 7;
+  optional string CreateBy = 8;
+  optional string UpdateDate = 9;
+  optional string UpdateBy = 10;
+}
+
+message Empty {
+
+}
