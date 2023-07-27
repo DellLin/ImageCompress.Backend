@@ -6,9 +6,14 @@ using Microsoft.AspNetCore.Mvc;
 public class TestController : ControllerBase
 {
     [Authorize]
+    [HttpGet("Authorize")]
+    public String TestAuthorize ()
+    {
+        return $"Hi {User.Identity!.Name}";
+    }
     [HttpGet]
     public String Test ()
     {
-        return $"Hi {User.Identity!.Name}";
+        return $"Test";
     }
 }
