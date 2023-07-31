@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using static ImageCompress.AccountSQL.AccountService;
+using Google.Apis.Auth.OAuth2;
+using Grpc.Auth;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -59,12 +61,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             };
         }
         );
-builder.Services.AddGrpcClient<AccountServiceClient>(o =>
+builder.Services.AddGrpcClient<AccountServiceClient>((serviceProvider, options) =>
 {
     if (builder.Environment.IsDevelopment())
-    { o.Address = new Uri("http://localhost:5243"); }
+    { options.Address = new Uri("http://localhost:5243"); }
     else
-    { o.Address = new Uri("https://imagecompress-account-sql-iaxnu4eisa-de.a.run.app"); }
+    { options.Address = new Uri("https://imagecompress-account-sql-iaxnu4eisa-de.a.run.app:443"); }
+}).ConfigureChannel(options =>
+{
+    var credential = GoogleCredential.GetApplicationDefault();
+    options.Credentials = credential.ToChannelCredentials();
 });
 builder.Services.AddSingleton<KmsHelper>();
 builder.Services.AddSingleton<JwtHelper>();
