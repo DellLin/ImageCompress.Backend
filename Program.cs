@@ -65,7 +65,11 @@ builder.Services.AddGrpcClient<AccountServiceClient>((serviceProvider, options) 
     if (builder.Environment.IsDevelopment())
     { options.Address = new Uri("http://localhost:5243"); }
     else
-    { options.Address = new Uri("https://imagecompress-account-sql-iaxnu4eisa-de.a.run.app:443"); }
+    { options.Address = new Uri("https://imagecompress-account-sql-iaxnu4eisa-de.a.run.app/"); }
+})
+.ConfigureChannel((options) => {
+    var credential = GoogleCredential.GetApplicationDefault();
+    options.Credentials = credential.ToChannelCredentials();
 });
 
 builder.Services.AddSingleton<KmsHelper>();
