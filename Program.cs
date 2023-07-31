@@ -6,7 +6,6 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using static ImageCompress.AccountSQL.AccountService;
 using Google.Apis.Auth.OAuth2;
-using Grpc.Auth;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -67,9 +66,13 @@ builder.Services.AddGrpcClient<AccountServiceClient>((serviceProvider, options) 
     else
     { options.Address = new Uri("https://imagecompress-account-sql-iaxnu4eisa-de.a.run.app/"); }
 })
-.ConfigureChannel((options) => {
+.AddCallCredentials(async (context, metadata) =>
+{
     var credential = GoogleCredential.GetApplicationDefault();
-    options.Credentials = credential.ToChannelCredentials();
+    var oidcTokenOptions = OidcTokenOptions.FromTargetAudience("https://imagecompress-account-sql-iaxnu4eisa-de.a.run.app");
+    var oidcToken = await credential.GetOidcTokenAsync(oidcTokenOptions);
+    var accessToken = await oidcToken.GetAccessTokenAsync();
+    metadata.Add("Authorization", $"Bearer {accessToken}");
 });
 
 builder.Services.AddSingleton<KmsHelper>();
