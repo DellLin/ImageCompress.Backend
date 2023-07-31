@@ -59,19 +59,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 // "1234567890123456" 應該從 IConfiguration 取得
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration.GetValue<string>("JwtSettings:SignKey")!))
             };
-        }
-        );
+        });
 builder.Services.AddGrpcClient<AccountServiceClient>((serviceProvider, options) =>
 {
     if (builder.Environment.IsDevelopment())
     { options.Address = new Uri("http://localhost:5243"); }
     else
     { options.Address = new Uri("https://imagecompress-account-sql-iaxnu4eisa-de.a.run.app:443"); }
-}).ConfigureChannel(options =>
-{
-    var credential = GoogleCredential.GetApplicationDefault();
-    options.Credentials = credential.ToChannelCredentials();
 });
+
 builder.Services.AddSingleton<KmsHelper>();
 builder.Services.AddSingleton<JwtHelper>();
 var app = builder.Build();
