@@ -4,8 +4,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using static ImageCompress.AccountSQL.AccountService;
 
-namespace ImageCompress.Backend.Controllers;
-
 [ApiController]
 [Route("api/[controller]")]
 public class AccountController : ControllerBase
@@ -91,7 +89,7 @@ public class AccountController : ControllerBase
             {
                 return BadRequest("Email or Password incorrect.");
             }
-            var accessToken = _jwtHelper.GenerateToken(signInViewModel.Email);
+            var accessToken = _jwtHelper.GenerateToken(account);
             return Ok(accessToken);
 
         }

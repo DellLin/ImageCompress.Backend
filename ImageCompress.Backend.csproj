@@ -6,6 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Protobuf Include="Protos\account.proto" GrpcServices="Client" />
+    <Protobuf Include="Protos\image.proto" GrpcServices="Client" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Google.Apis.Auth.AspNetCore3" Version="1.61.0" />
@@ -20,6 +21,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.9" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.7" />
+    <PackageReference Include="SkiaSharp" Version="2.88.3" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
   </ItemGroup>
 </Project>

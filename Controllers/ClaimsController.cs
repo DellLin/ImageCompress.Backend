@@ -17,7 +17,6 @@ public class ClaimsController : ControllerBase
     public ActionResult GetClaims()
     {
         return Ok(User.Claims.Select(p => new { p.Type, p.Value }));
-
     }
     [Authorize]
     [HttpGet("Username")]

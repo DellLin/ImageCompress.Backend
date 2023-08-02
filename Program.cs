@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using static ImageCompress.AccountSQL.AccountService;
 using Google.Apis.Auth.OAuth2;
+using static ImageCompress.ImageService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -64,10 +65,18 @@ builder.Services.AddGrpcClient<AccountServiceClient>((serviceProvider, options) 
     if (builder.Environment.IsDevelopment())
     { options.Address = new Uri("http://localhost:5243"); }
     else
-    { options.Address = new Uri("https://imagecompress-account-sql-iaxnu4eisa-de.a.run.app/"); }
+    { options.Address = new Uri("https://imagecompress-account-sql-iaxnu4eisa-de.a.run.app"); }
+})
+.ConfigureChannel(options =>
+{
+    if (builder.Environment.IsDevelopment())
+    { options.UnsafeUseInsecureChannelCallCredentials = true; }
 })
 .AddCallCredentials(async (context, metadata) =>
 {
+
+    if (builder.Environment.IsDevelopment())
+    { return; }
     var credential = GoogleCredential.GetApplicationDefault();
     var oidcTokenOptions = OidcTokenOptions.FromTargetAudience("https://imagecompress-account-sql-iaxnu4eisa-de.a.run.app");
     var oidcToken = await credential.GetOidcTokenAsync(oidcTokenOptions);
@@ -75,8 +84,32 @@ builder.Services.AddGrpcClient<AccountServiceClient>((serviceProvider, options) 
     metadata.Add("Authorization", $"Bearer {accessToken}");
 });
 
+builder.Services.AddGrpcClient<ImageServiceClient>((serviceProvider, options) =>
+{
+    if (builder.Environment.IsDevelopment())
+    { options.Address = new Uri("http://localhost:5164"); }
+    else
+    { options.Address = new Uri("https://imagecompress-image-iaxnu4eisa-uc.a.run.app"); }
+})
+.ConfigureChannel(options =>
+{
+    if (builder.Environment.IsDevelopment())
+    { options.UnsafeUseInsecureChannelCallCredentials = true; }
+})
+.AddCallCredentials(async (context, metadata) =>
+{
+
+    if (builder.Environment.IsDevelopment())
+    { return; }
+    var credential = GoogleCredential.GetApplicationDefault();
+    var oidcTokenOptions = OidcTokenOptions.FromTargetAudience("https://imagecompress-image-iaxnu4eisa-uc.a.run.app");
+    var oidcToken = await credential.GetOidcTokenAsync(oidcTokenOptions);
+    var accessToken = await oidcToken.GetAccessTokenAsync();
+    metadata.Add("Authorization", $"Bearer {accessToken}");
+});
 builder.Services.AddSingleton<KmsHelper>();
 builder.Services.AddSingleton<JwtHelper>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -87,6 +120,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors(x => x.AllowAnyHeader()
+      .AllowAnyMethod()
+      .AllowAnyOrigin());
 
 app.UseAuthentication();
 app.UseAuthorization();
