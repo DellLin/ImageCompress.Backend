@@ -89,7 +89,7 @@ builder.Services.AddGrpcClient<ImageServiceClient>((serviceProvider, options) =>
     if (builder.Environment.IsDevelopment())
     { options.Address = new Uri("http://localhost:5164"); }
     else
-    { options.Address = new Uri("https://imagecompress-image-iaxnu4eisa-uc.a.run.app"); }
+    { options.Address = new Uri("https://imagecompress-image-iaxnu4eisa-de.a.run.app"); }
 })
 .ConfigureChannel(options =>
 {
@@ -102,7 +102,7 @@ builder.Services.AddGrpcClient<ImageServiceClient>((serviceProvider, options) =>
     if (builder.Environment.IsDevelopment())
     { return; }
     var credential = GoogleCredential.GetApplicationDefault();
-    var oidcTokenOptions = OidcTokenOptions.FromTargetAudience("https://imagecompress-image-iaxnu4eisa-uc.a.run.app");
+    var oidcTokenOptions = OidcTokenOptions.FromTargetAudience("https://imagecompress-image-iaxnu4eisa-de.a.run.app");
     var oidcToken = await credential.GetOidcTokenAsync(oidcTokenOptions);
     var accessToken = await oidcToken.GetAccessTokenAsync();
     metadata.Add("Authorization", $"Bearer {accessToken}");
