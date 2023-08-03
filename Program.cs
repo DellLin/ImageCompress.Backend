@@ -1,3 +1,7 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System.Text;
 using Google.Apis.Auth.AspNetCore3;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -7,6 +11,7 @@ using Microsoft.OpenApi.Models;
 using static ImageCompress.AccountSQL.AccountService;
 using Google.Apis.Auth.OAuth2;
 using static ImageCompress.ImageService;
+using Microsoft.AspNetCore.Http.Features;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -109,11 +114,9 @@ builder.Services.AddGrpcClient<ImageServiceClient>((serviceProvider, options) =>
 });
 builder.Services.AddSingleton<KmsHelper>();
 builder.Services.AddSingleton<JwtHelper>();
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();

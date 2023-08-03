@@ -1,3 +1,4 @@
+using System.Text;
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
@@ -174,8 +175,10 @@ public class ImageController : ControllerBase
             var fileName = "";
             while (await response.ResponseStream.MoveNext())
             {
-                contentType = response.ResponseStream.Current.ContentType;
-                fileName = response.ResponseStream.Current.FileName;
+                if (!string.IsNullOrEmpty(response.ResponseStream.Current.ContentType))
+                { contentType = response.ResponseStream.Current.ContentType; }
+                if (!string.IsNullOrEmpty(response.ResponseStream.Current.FileName))
+                { fileName = response.ResponseStream.Current.FileName; }
                 await ms.WriteAsync(response.ResponseStream.Current.FileContent.ToByteArray());
             }
             // var response = await _imageServiceClient.DownloadImageAsync(new DownloadRequest { FileId = fileId });
