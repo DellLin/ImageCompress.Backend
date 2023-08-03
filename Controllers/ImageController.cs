@@ -161,11 +161,11 @@ public class ImageController : ControllerBase
     }
     [AllowAnonymous]
     [HttpGet("Download")]
-    public async Task<FileContentResult> Download(string fileId)
+    public async Task<FileContentResult> Download(string fileId, bool isCompressed)
     {
         try
         {
-            using var response = _imageServiceClient.DownloadImage(new DownloadRequest { FileId = fileId });
+            using var response = _imageServiceClient.DownloadImage(new DownloadRequest { FileId = fileId, IsCompressed = isCompressed });
             using var ms = new MemoryStream();
             var contentType = "";
             var fileName = "";
