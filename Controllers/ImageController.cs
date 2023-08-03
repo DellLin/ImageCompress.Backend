@@ -1,6 +1,7 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
 
-using System.Drawing;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Google.Protobuf;
 using Grpc.Core;
@@ -9,6 +10,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SkiaSharp;
 using static ImageCompress.ImageService;
+using System;
+
+namespace ImageCompress.Controllers;
 [Authorize]
 [ApiController]
 [Route("api/[controller]")]
@@ -34,18 +38,17 @@ public class ImageController : ControllerBase
             if (files == null)
                 return imageIntoItemList;
             var accountId = User.FindFirstValue("accountId");
-            _logger.LogInformation(accountId);
             var requestStream = _imageServiceClient.UploadImage();
 
             foreach (var file in files)
             {
-                byte[] buffer = new byte[1024];
+                var buffer = new byte[1024];
                 int bytesRead;
 
                 var stream = new MemoryStream();
                 file.CopyTo(stream);
                 stream.Position = 0;
-                while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                while ((bytesRead = await stream.ReadAsync(buffer)) > 0)
                 {
                     await requestStream.RequestStream.WriteAsync(new UploadRequest
                     {
@@ -112,8 +115,8 @@ public class ImageController : ControllerBase
             {
                 height = width * oHeight / oWidth;
             }
-            using SKBitmap resizedBitmap = new SKBitmap(width, height);
-            using SKCanvas canvas = new SKCanvas(resizedBitmap);
+            using var resizedBitmap = new SKBitmap(width, height);
+            using var canvas = new SKCanvas(resizedBitmap);
             using var surface = SKSurface.Create(new SKImageInfo
             {
                 Width = width,
@@ -122,7 +125,7 @@ public class ImageController : ControllerBase
                 AlphaType = SKAlphaType.Premul
             });
             // 使用高品質的縮放模式
-            SKPaint paint = new SKPaint
+            var paint = new SKPaint
             {
                 IsAntialias = true,
                 FilterQuality = SKFilterQuality.High
@@ -132,8 +135,8 @@ public class ImageController : ControllerBase
             surface.Canvas.DrawBitmap(imgBmp, SKRect.Create(resizedBitmap.Width, resizedBitmap.Height), paint);
             surface.Canvas.Flush();
             // 將調整後的圖片轉換成位元組陣列
-            using SKImage newImage = surface.Snapshot();
-            using SKData data = newImage.Encode(SKEncodedImageFormat.Png, 100); // 選擇適合的圖片格式和壓縮品質
+            using var newImage = surface.Snapshot();
+            using var data = newImage.Encode(SKEncodedImageFormat.Png, 100); // 選擇適合的圖片格式和壓縮品質
             return new FileContentResult(data.ToArray(), contentType);
         }
         catch (System.Exception)
