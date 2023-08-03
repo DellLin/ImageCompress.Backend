@@ -173,13 +173,13 @@ public class ImageController : ControllerBase
             using var ms = new MemoryStream();
             var contentType = "";
             var fileName = "";
-            while (await response.ResponseStream.MoveNext())
+            await foreach (var chunk in response.ResponseStream.ReadAllAsync())
             {
-                if (!string.IsNullOrEmpty(response.ResponseStream.Current.ContentType))
-                { contentType = response.ResponseStream.Current.ContentType; }
-                if (!string.IsNullOrEmpty(response.ResponseStream.Current.FileName))
-                { fileName = response.ResponseStream.Current.FileName; }
-                await ms.WriteAsync(response.ResponseStream.Current.FileContent.ToByteArray());
+                if (!string.IsNullOrEmpty(chunk.ContentType))
+                { contentType = chunk.ContentType; }
+                if (!string.IsNullOrEmpty(chunk.FileName))
+                { fileName = chunk.FileName; }
+                await ms.WriteAsync(chunk.FileContent.ToByteArray());
             }
             // var response = await _imageServiceClient.DownloadImageAsync(new DownloadRequest { FileId = fileId });
             return File(ms.ToArray(), contentType, fileName);
