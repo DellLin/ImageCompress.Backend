@@ -42,6 +42,7 @@ public class ImageController : ControllerBase
                     FileContent = Google.Protobuf.ByteString.CopyFrom(stream.ToArray()),
                     ContentType = file.ContentType,
                     AccountId = accountId,
+                    Quality = form.Quality,
                 });
                 imageIntoItemList.Add(response.Image);
             }
@@ -154,7 +155,7 @@ public class ImageController : ControllerBase
 
 public class FileUpdateRequest
 {
-    public int CompressRatio { get; set; }
+    public int Quality { get; set; }
     public IFormFile[]? File { get; set; }
 
 }
