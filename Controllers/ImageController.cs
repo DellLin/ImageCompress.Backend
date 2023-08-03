@@ -2,6 +2,8 @@
 using System.Drawing;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Google.Protobuf;
+using Grpc.Core;
 using ImageCompress;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -22,6 +24,7 @@ public class ImageController : ControllerBase
         _imageServiceClient = imageServiceClient;
     }
     [HttpPost]
+    [RequestSizeLimit(bytes: 60_000_000)]
     public async Task<ICollection<ImageInfoItem>> UploadImage([FromForm] FileUpdateRequest form)
     {
         try
@@ -32,18 +35,30 @@ public class ImageController : ControllerBase
                 return imageIntoItemList;
             var accountId = User.FindFirstValue("accountId");
             _logger.LogInformation(accountId);
+            var requestStream = _imageServiceClient.UploadImage();
+
             foreach (var file in files)
             {
+                byte[] buffer = new byte[1024];
+                int bytesRead;
+
                 var stream = new MemoryStream();
                 file.CopyTo(stream);
-                var response = await _imageServiceClient.UploadImageAsync(new UploadRequest
+                stream.Position = 0;
+                while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
                 {
-                    FileName = file.FileName,
-                    FileContent = Google.Protobuf.ByteString.CopyFrom(stream.ToArray()),
-                    ContentType = file.ContentType,
-                    AccountId = accountId,
-                    Quality = form.Quality,
-                });
+                    await requestStream.RequestStream.WriteAsync(new UploadRequest
+                    {
+                        FileName = file.FileName,
+                        ContentType = file.ContentType,
+                        Quality = form.Quality,
+                        AccountId = accountId,
+                        FileContent = ByteString.CopyFrom(buffer, 0, bytesRead)
+                    });
+                }
+
+                await requestStream.RequestStream.CompleteAsync();
+                var response = await requestStream.ResponseAsync;
                 imageIntoItemList.Add(response.Image);
             }
             return imageIntoItemList;
@@ -75,8 +90,16 @@ public class ImageController : ControllerBase
     {
         try
         {
-            var image = await _imageServiceClient.DownloadImageAsync(new DownloadRequest { FileId = fileId });
-            using var oStream = new MemoryStream(image.FileContent.ToByteArray());
+            using var response = _imageServiceClient.DownloadImage(new DownloadRequest { FileId = fileId });
+            using var oStream = new MemoryStream();
+            var contentType = "";
+            while (await response.ResponseStream.MoveNext())
+            {
+                if (!string.IsNullOrEmpty(response.ResponseStream.Current.ContentType))
+                { contentType = response.ResponseStream.Current.ContentType; }
+                await oStream.WriteAsync(response.ResponseStream.Current.FileContent.ToByteArray());
+            }
+            oStream.Position = 0;
             using var imgBmp = SKBitmap.Decode(oStream);
             var oWidth = imgBmp.Width;
             var oHeight = imgBmp.Height;
@@ -111,7 +134,7 @@ public class ImageController : ControllerBase
             // 將調整後的圖片轉換成位元組陣列
             using SKImage newImage = surface.Snapshot();
             using SKData data = newImage.Encode(SKEncodedImageFormat.Png, 100); // 選擇適合的圖片格式和壓縮品質
-            return new FileContentResult(data.ToArray(), image.ContentType);
+            return new FileContentResult(data.ToArray(), contentType);
         }
         catch (System.Exception)
         {
@@ -142,8 +165,18 @@ public class ImageController : ControllerBase
     {
         try
         {
-            var response = await _imageServiceClient.DownloadImageAsync(new DownloadRequest { FileId = fileId });
-            return File(response.FileContent.ToByteArray(), response.ContentType, response.FileName);
+            using var response = _imageServiceClient.DownloadImage(new DownloadRequest { FileId = fileId });
+            using var ms = new MemoryStream();
+            var contentType = "";
+            var fileName = "";
+            while (await response.ResponseStream.MoveNext())
+            {
+                contentType = response.ResponseStream.Current.ContentType;
+                fileName = response.ResponseStream.Current.FileName;
+                await ms.WriteAsync(response.ResponseStream.Current.FileContent.ToByteArray());
+            }
+            // var response = await _imageServiceClient.DownloadImageAsync(new DownloadRequest { FileId = fileId });
+            return File(ms.ToArray(), contentType, fileName);
         }
         catch (System.Exception)
         {
